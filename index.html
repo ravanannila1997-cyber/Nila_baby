@@ -45,6 +45,8 @@ button:disabled{opacity:.5;cursor:default}
   <h1 id="hello">உங்களுடன் பேச காத்திருக்கிறார்.</h1>
   <p>துணையைத் தேர்ந்தெடுங்கள். மைக்கில் தமிழிலோ ஆங்கிலத்திலோ பேசுங்கள், அல்லது தட்டச்சு செய்யுங்கள்.</p>
   <div class="pers" id="pers"></div>
+  <div class="pers"><button id="romance" aria-pressed="false">💕 Romantic Mode: OFF</button><button id="outfit">👗 Outfit: Classic</button></div>
+  <p id="outfitNote">Avatar உடை மாற்றங்கள் இப்போது தேர்வு/preview மட்டும்; model.glb-ல் outfit variants இருந்தால் மட்டுமே 3D-ல் மாறும்.</p>
   <button class="primary" id="start">அழைப்பைத் தொடங்கு</button>
 </div>
 
@@ -74,8 +76,11 @@ var PERSONAS=[
 ];
 var CFG={name:"மீரா",enName:"Meera",persona:"meera",model:"model.glb",pitch:1.2,ai:"/.netlify/functions/chat"};
 var $=function(s){return document.querySelector(s)};
-var lang="ta",history=[],speaking=false,listening=false,rec=null,inCall=false;
+var lang="ta",history=[],speaking=false,listening=false,rec=null,inCall=false,romanticMode=false,outfitChoice=0;
 var callId=null,callStartedAt=null,timerTick=null,speakerOn=true,avatarOn=true;
+var outfitNames=["Classic","Soft Pink","Elegant","Casual"];
+$("#romance").onclick=function(){romanticMode=!romanticMode;this.setAttribute("aria-pressed",String(romanticMode));this.textContent=romanticMode?"💕 Romantic Mode: ON":"💕 Romantic Mode: OFF";};
+$("#outfit").onclick=function(){outfitChoice=(outfitChoice+1)%outfitNames.length;this.textContent="👗 Outfit: "+outfitNames[outfitChoice];$("#outfitNote").textContent="தேர்ந்தெடுத்த style: "+outfitNames[outfitChoice]+" (இது label preview மட்டும்; 3D உடை இன்னும் மாற்றப்படவில்லை).";};
 var sid=(function(){try{var s=localStorage.getItem("sid");if(!s){s=Math.random().toString(36).slice(2)+Date.now().toString(36);localStorage.setItem("sid",s)}return s}catch(e){return "anon"+Date.now().toString(36)}})();
 
 // ---------- Personas
@@ -199,7 +204,7 @@ function local(q){
 }
 async function reply(q){
   try{
-    var r=await fetch(CFG.ai,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({message:q,history:history.slice(-10),persona:CFG.persona,session:sid})});
+    var r=await fetch(CFG.ai,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({message:q,history:history.slice(-10),persona:CFG.persona,session:sid,romantic:romanticMode,outfit:outfitNames[outfitChoice]})});
     if(r.ok){var d=await r.json();if(d&&d.reply)return d.reply}
   }catch(e){}
   return local(q);
