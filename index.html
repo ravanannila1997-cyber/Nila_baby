@@ -33,12 +33,14 @@ button:disabled{opacity:.5;cursor:default}
 #txt{flex:1;min-width:0;padding:.6rem .8rem;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--text);font:inherit}
 #wave{width:10px;height:10px;border-radius:50%;background:var(--accent);display:inline-block;margin-right:.4rem;opacity:.25}
 .talk #wave{animation:p .5s infinite alternate}
+#facefx{position:fixed;left:50%;top:45%;width:min(58vw,340px);height:min(50vh,360px);transform:translate(-50%,-50%);pointer-events:none;opacity:0;transition:opacity .25s}
+#facefx.blush{opacity:1;background:radial-gradient(ellipse at 23% 57%,rgba(255,95,145,.35) 0%,rgba(255,95,145,0) 19%),radial-gradient(ellipse at 77% 57%,rgba(255,95,145,.35) 0%,rgba(255,95,145,0) 19%)}
 @keyframes p{to{opacity:1;transform:scale(1.5)}}
 @media (prefers-reduced-motion:reduce){.talk #wave{animation:none;opacity:1}}
 </style>
 </head>
 <body>
-<canvas id="stage"></canvas>
+<canvas id="stage"></canvas><div id="facefx" aria-hidden="true"></div>
 
 <div class="overlay" id="loader"><p>மாடல் ஏற்றப்படுகிறது… <b id="pct">0%</b></p></div>
 <div class="overlay" id="intro" style="display:none">
@@ -56,7 +58,7 @@ button:disabled{opacity:.5;cursor:default}
     <div class="row"><button id="lang">தமிழ்</button><button id="end">முடி</button></div>
   </div>
   <div id="panel">
-    <div class="call-tools"><span id="timer">00:00</span><button id="speaker" aria-pressed="true">🔊 Speaker</button><button id="camstyle" aria-pressed="true">✨ Avatar</button></div>
+    <div class="call-tools"><span id="timer">00:00</span><button id="blushBtn">🌸 Blush</button><button id="winkBtn">😉 Wink</button><button id="shyBtn">😊 Shy</button><button id="eyeBtn" aria-pressed="false">👀 Eye contact</button><button id="speaker" aria-pressed="true">🔊 Speaker</button><button id="camstyle" aria-pressed="true">✨ Avatar</button></div>
     <div id="log" aria-live="polite"></div>
     <div class="row">
       <button id="mic" class="primary" aria-pressed="false">🎤 பேசு</button>
@@ -146,7 +148,7 @@ new THREE.GLTFLoader().load(CFG.model,function(g){
 function(){$("#loader").innerHTML="<p>model.glb ஏற்ற முடியவில்லை. Netlify-இல் deploy செய்து திறக்கவும் (file:// வேலை செய்யாது).</p>"});
 
 // ---------- Animation
-var clock=new THREE.Clock(),nextBlink=2,blinkAt=-1,mouth=0,smile=0,nodT=-1,mouthPulse=0;
+var clock=new THREE.Clock(),nextBlink=2,blinkAt=-1,mouth=0,smile=0,nodT=-1,mouthPulse=0,blushUntil=0,expressionUntil=0,eyeContact=false;
 function setM(list,v){list.forEach(function(m){m.mesh.morphTargetInfluences[m.i]=v})}
 function loop(){
   requestAnimationFrame(loop);var dt=clock.getDelta(),t=clock.elapsedTime;
@@ -161,7 +163,8 @@ function loop(){
     if(t>nextBlink&&blinkAt<0){blinkAt=t;nextBlink=t+2.5+Math.random()*3}
     var b=0;if(blinkAt>=0){var k=(t-blinkAt)/0.16;b=k<1?Math.sin(k*Math.PI):0;if(k>=1)blinkAt=-1}
     setM(morphs.blink,b);
-    if(headBone)headBone.rotation.x=headBase+(speaking?Math.sin(t*4)*0.03:0)+(nodT>=0?Math.sin((t-nodT)*8)*0.15:0);
+    if(headBone){headBone.rotation.x=headBase+(speaking?Math.sin(t*4)*0.03:0)+(nodT>=0?Math.sin((t-nodT)*8)*0.15:0)+(expressionUntil>t?0.12:0);headBone.rotation.y+=(eyeContact?0:Math.sin(t*0.35)*0.002);headBone.rotation.y+=(eyeContact?Math.sin(t*0.7)*0.015:0)}
+  $("#facefx").classList.toggle("blush",t<blushUntil);if(expressionUntil>t){smile+=(0.75-smile)*0.12;setM(morphs.smile,smile)}
     if(nodT>=0&&t-nodT>1.2)nodT=-1;
   }
   renderer.render(scene,camera);
