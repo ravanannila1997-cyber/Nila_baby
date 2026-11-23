@@ -1,9 +1,9 @@
 # Nila_baby - AI Video Call (3D avatar)
 
-Tamil/English AI companion with a 3D avatar, voice in/out and chat history.
+Tamil/English AI companion with 3D avatars, voice in/out and chat history.
 
 ## Features
-- 3 personas: Meera (friend), Arun (mentor), Priya (language buddy)
+- 3 characters, each with its own avatar: Nila (model.glb), Meera (base_basic_pbr.glb), Mathu (base_basic_shaded.glb)
 - Voice (mic + speech) and text chat, Tamil / English
 - Chat history saved in Neon Postgres (`db/schema.sql`)
 - AI replies via Netlify Function `netlify/functions/chat.js` (family-friendly system prompt)

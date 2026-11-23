@@ -14,18 +14,18 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--accent);outline
 button.primary{background:var(--accent);color:var(--onaccent);border-color:var(--accent);font-weight:600}
 button.on{background:#e5484d;border-color:#e5484d;color:#fff}
 button:disabled{opacity:.5;cursor:default}
-.overlay{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1rem;text-align:center;padding:1.5rem;background:rgba(15,23,36,.82)}
-.overlay h1{font-size:clamp(2rem,7vw,3.4rem);margin:0;line-height:1.15}
+.overlay{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:1rem;text-align:center;padding:1.5rem 1.5rem calc(2rem + env(safe-area-inset-bottom,0px));background:linear-gradient(to top,rgba(15,23,36,.92) 35%,rgba(15,23,36,.15))}
+#loader{justify-content:center;background:rgba(15,23,36,.85)}
+.overlay h1{font-size:clamp(1.8rem,6vw,3rem);margin:0;line-height:1.15}
 .overlay p{margin:0;color:var(--muted);max-width:46ch}
 .pers{display:flex;gap:.5rem;flex-wrap:wrap;justify-content:center}
-.pers button{display:flex;flex-direction:column;align-items:center;min-width:8.5rem}
+.pers button{display:flex;flex-direction:column;align-items:center;min-width:7.5rem}
 .pers button small{color:var(--muted)}
 .pers button.sel{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent)}
 #call{display:none}
 #top{position:fixed;top:0;left:0;right:0;padding:calc(.7rem + env(safe-area-inset-top,0px)) 1rem .7rem;display:flex;justify-content:space-between;align-items:center}
 #who{font-weight:600}#status{color:var(--muted);font-size:.85rem}
 #panel{position:fixed;left:0;right:0;bottom:0;max-width:640px;margin:0 auto;padding:.8rem 1rem calc(.8rem + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:.5rem}
-.call-tools{display:flex;align-items:center;justify-content:center;gap:.5rem;flex-wrap:wrap}.call-tools #timer{font-variant-numeric:tabular-nums;font-weight:700;color:var(--accent);padding:.35rem .6rem;border:1px solid var(--line);border-radius:999px}.call-tools button{font-size:.86rem;padding:.4rem .65rem}body.avatar-hidden #stage{opacity:.12;transition:opacity .25s}#stage{transition:opacity .25s}
 #log{max-height:24vh;overflow-y:auto;display:flex;flex-direction:column;gap:.35rem}
 .m{padding:.45rem .75rem;border-radius:12px;background:rgba(24,34,54,.92);border:1px solid var(--line);max-width:88%;font-size:.95rem}
 .m.me{align-self:flex-end;background:var(--accent);color:var(--onaccent);border-color:var(--accent)}
@@ -33,32 +33,27 @@ button:disabled{opacity:.5;cursor:default}
 #txt{flex:1;min-width:0;padding:.6rem .8rem;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--text);font:inherit}
 #wave{width:10px;height:10px;border-radius:50%;background:var(--accent);display:inline-block;margin-right:.4rem;opacity:.25}
 .talk #wave{animation:p .5s infinite alternate}
-#facefx{position:fixed;left:50%;top:45%;width:min(58vw,340px);height:min(50vh,360px);transform:translate(-50%,-50%);pointer-events:none;opacity:0;transition:opacity .25s}
-#facefx.blush{opacity:1;background:radial-gradient(ellipse at 23% 57%,rgba(255,95,145,.35) 0%,rgba(255,95,145,0) 19%),radial-gradient(ellipse at 77% 57%,rgba(255,95,145,.35) 0%,rgba(255,95,145,0) 19%)}
 @keyframes p{to{opacity:1;transform:scale(1.5)}}
 @media (prefers-reduced-motion:reduce){.talk #wave{animation:none;opacity:1}}
 </style>
 </head>
 <body>
-<canvas id="stage"></canvas><div id="facefx" aria-hidden="true"></div>
+<canvas id="stage"></canvas>
 
 <div class="overlay" id="loader"><p>மாடல் ஏற்றப்படுகிறது… <b id="pct">0%</b></p></div>
 <div class="overlay" id="intro" style="display:none">
-  <h1 id="hello">உங்களுடன் பேச காத்திருக்கிறார்.</h1>
+  <h1 id="hello"></h1>
   <p>துணையைத் தேர்ந்தெடுங்கள். மைக்கில் தமிழிலோ ஆங்கிலத்திலோ பேசுங்கள், அல்லது தட்டச்சு செய்யுங்கள்.</p>
   <div class="pers" id="pers"></div>
-  <div class="pers"><button id="romance" aria-pressed="false">💕 Romantic Mode: OFF</button><button id="outfit">👗 Outfit: Classic</button></div>
-  <p id="outfitNote">Avatar உடை மாற்றங்கள் இப்போது தேர்வு/preview மட்டும்; model.glb-ல் outfit variants இருந்தால் மட்டுமே 3D-ல் மாறும்.</p>
   <button class="primary" id="start">அழைப்பைத் தொடங்கு</button>
 </div>
 
 <div id="call">
   <div id="top">
-    <div><div id="who">மீரா</div><div id="status" aria-live="polite"><span id="wave"></span><span id="st">இணைந்தது</span></div></div>
+    <div><div id="who"></div><div id="status" aria-live="polite"><span id="wave"></span><span id="st">இணைந்தது</span></div></div>
     <div class="row"><button id="lang">தமிழ்</button><button id="end">முடி</button></div>
   </div>
   <div id="panel">
-    <div class="call-tools"><span id="timer">00:00</span><button id="blushBtn">🌸 Blush</button><button id="winkBtn">😉 Wink</button><button id="shyBtn">😊 Shy</button><button id="eyeBtn" aria-pressed="false">👀 Eye contact</button><button id="speaker" aria-pressed="true">🔊 Speaker</button><button id="camstyle" aria-pressed="true">✨ Avatar</button></div>
     <div id="log" aria-live="polite"></div>
     <div class="row">
       <button id="mic" class="primary" aria-pressed="false">🎤 பேசு</button>
@@ -72,31 +67,28 @@ button:disabled{opacity:.5;cursor:default}
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
 <script>
 var PERSONAS=[
- {id:"meera",name:"மீரா",en:"Meera",tag:"Friend",pitch:1.2},
- {id:"arun",name:"அருண்",en:"Arun",tag:"Mentor",pitch:0.8},
- {id:"priya",name:"பிரியா",en:"Priya",tag:"Language buddy",pitch:1.1}
+ {id:"nila",name:"நிலா",en:"Nila",tag:"Friend",pitch:1.2,model:"model.glb"},
+ {id:"meera",name:"மீரா",en:"Meera",tag:"Language buddy",pitch:1.1,model:"base_basic_pbr.glb"},
+ {id:"mathu",name:"மது",en:"Mathu",tag:"Mentor",pitch:1.0,model:"base_basic_shaded.glb"}
 ];
-var CFG={name:"மீரா",enName:"Meera",persona:"meera",model:"model.glb",pitch:1.2,ai:"/.netlify/functions/chat"};
+var CFG={name:"",enName:"",persona:"",model:"",pitch:1.2,ai:"/.netlify/functions/chat"};
 var $=function(s){return document.querySelector(s)};
-var lang="ta",history=[],speaking=false,listening=false,rec=null,inCall=false,romanticMode=false,outfitChoice=0;
-var callId=null,callStartedAt=null,timerTick=null,speakerOn=true,avatarOn=true;
-var outfitNames=["Classic","Soft Pink","Elegant","Casual"];
-$("#romance").onclick=function(){romanticMode=!romanticMode;this.setAttribute("aria-pressed",String(romanticMode));this.textContent=romanticMode?"💕 Romantic Mode: ON":"💕 Romantic Mode: OFF";};
-$("#outfit").onclick=function(){outfitChoice=(outfitChoice+1)%outfitNames.length;this.textContent="👗 Outfit: "+outfitNames[outfitChoice];$("#outfitNote").textContent="தேர்ந்தெடுத்த style: "+outfitNames[outfitChoice]+" (இது label preview மட்டும்; 3D உடை இன்னும் மாற்றப்படவில்லை).";};
+var lang="ta",history=[],speaking=false,listening=false,rec=null,inCall=false;
 var sid=(function(){try{var s=localStorage.getItem("sid");if(!s){s=Math.random().toString(36).slice(2)+Date.now().toString(36);localStorage.setItem("sid",s)}return s}catch(e){return "anon"+Date.now().toString(36)}})();
 
 // ---------- Personas
-function pick(p){
-  CFG.name=p.name;CFG.enName=p.en;CFG.persona=p.id;CFG.pitch=p.pitch;
+function pick(p,skipLoad){
+  CFG.name=p.name;CFG.enName=p.en;CFG.persona=p.id;CFG.pitch=p.pitch;CFG.model=p.model;
   $("#who").textContent=p.name;$("#hello").textContent=p.name+" உங்களுடன் பேச காத்திருக்கிறார்.";
   Array.prototype.forEach.call($("#pers").children,function(b){b.classList.toggle("sel",b.dataset.id===p.id)});
+  if(!skipLoad)loadModel(p.model);
 }
 PERSONAS.forEach(function(p){
   var b=document.createElement("button");b.dataset.id=p.id;
   b.innerHTML="<b></b><small></small>";b.firstChild.textContent=p.name;b.lastChild.textContent=p.tag;
   b.onclick=function(){pick(p)};$("#pers").appendChild(b);
 });
-pick(PERSONAS[0]);
+pick(PERSONAS[0],true);
 
 // ---------- Scene
 var renderer=new THREE.WebGLRenderer({canvas:$("#stage"),antialias:true,alpha:true});
@@ -114,41 +106,56 @@ function resize(){
 }
 addEventListener("resize",resize);resize();
 
-// ---------- Model
-var root=new THREE.Group(),model=null,mixer=null,clips={},morphs={jaw:[],blink:[],smile:[]},headBone=null,headBase=0;
+// ---------- Model (one per character)
+var root=new THREE.Group(),model=null,mixer=null,clips={},morphs={jaw:[],blink:[],smile:[]},headBone=null,headBase=0,curFile="",gl=new THREE.GLTFLoader();
 scene.add(root);
-new THREE.GLTFLoader().load(CFG.model,function(g){
-  model=g.scene;
-  model.traverse(function(o){
-    if(o.isMesh){
-      var ms=Array.isArray(o.material)?o.material:[o.material];
-      ms.forEach(function(m){m.metalness=0;m.metalnessMap=null;m.roughness=Math.max(m.roughness||0.6,0.55);m.needsUpdate=true});
-      if(o.morphTargetDictionary){
-        Object.keys(o.morphTargetDictionary).forEach(function(k){
-          var e={mesh:o,i:o.morphTargetDictionary[k]};
-          if(/jawopen|mouthopen|viseme_aa|mouth_open/i.test(k))morphs.jaw.push(e);
-          else if(/eyeblink|blink/i.test(k))morphs.blink.push(e);
-          else if(/mouthsmile|smile/i.test(k))morphs.smile.push(e);
-        });
+function loadModel(file){
+  if(file===curFile)return;curFile=file;
+  var btn=$("#start");btn.disabled=true;btn.textContent="ஏற்றுகிறது… 0%";
+  gl.load(file,function(g){
+    if(file!==curFile)return;
+    if(model){root.remove(model);model.traverse(function(o){if(o.geometry)o.geometry.dispose()})}
+    model=null;mixer=null;clips={};morphs={jaw:[],blink:[],smile:[]};headBone=null;headBase=0;
+    var m3=g.scene;
+    m3.traverse(function(o){
+      if(o.isMesh){
+        var ms=Array.isArray(o.material)?o.material:[o.material];
+        ms.forEach(function(m){m.metalness=0;m.metalnessMap=null;m.roughness=Math.max(m.roughness||0.6,0.55);m.needsUpdate=true});
+        if(o.morphTargetDictionary){
+          Object.keys(o.morphTargetDictionary).forEach(function(k){
+            var e={mesh:o,i:o.morphTargetDictionary[k]};
+            if(/jawopen|mouthopen|viseme_aa|mouth_open/i.test(k))morphs.jaw.push(e);
+            else if(/eyeblink|blink/i.test(k))morphs.blink.push(e);
+            else if(/mouthsmile|smile/i.test(k))morphs.smile.push(e);
+          });
+        }
       }
+      if(o.isBone&&/(^|[^a-z])head$/i.test(o.name)&&!headBone){headBone=o;headBase=o.rotation.x}
+    });
+    var box=new THREE.Box3().setFromObject(m3),s=1.68/Math.max(box.getSize(new THREE.Vector3()).y,0.001);
+    m3.scale.setScalar(s);box.setFromObject(m3);var c=box.getCenter(new THREE.Vector3());
+    m3.position.set(-c.x,-box.min.y,-c.z);root.add(m3);
+    if(g.animations&&g.animations.length){
+      mixer=new THREE.AnimationMixer(m3);
+      g.animations.forEach(function(a){clips[a.name.toLowerCase()]=mixer.clipAction(a)});
+      var idle=clips[Object.keys(clips).filter(function(n){return /idle|stand/.test(n)})[0]]||clips[Object.keys(clips)[0]];
+      if(idle)idle.play();
     }
-    if(o.isBone&&/(^|[^a-z])head$/i.test(o.name)&&!headBone){headBone=o;headBase=o.rotation.x}
+    model=m3;
+    $("#loader").style.display="none";$("#intro").style.display="flex";
+    btn.disabled=false;btn.textContent="அழைப்பைத் தொடங்கு";
+  },function(e){
+    if(e.total){var p=Math.round(e.loaded/e.total*100)+"%";$("#pct").textContent=p;if(file===curFile)btn.textContent="ஏற்றுகிறது… "+p}
+  },function(){
+    if(file!==curFile)return;
+    $("#loader").style.display="flex";
+    $("#loader").innerHTML="<p>"+file+" ஏற்ற முடியவில்லை. Netlify-இல் deploy செய்து திறக்கவும் (file:// வேலை செய்யாது).</p>";
   });
-  var box=new THREE.Box3().setFromObject(model),s=1.68/Math.max(box.getSize(new THREE.Vector3()).y,0.001);
-  model.scale.setScalar(s);box.setFromObject(model);var c=box.getCenter(new THREE.Vector3());
-  model.position.set(-c.x,-box.min.y,-c.z);root.add(model);
-  if(g.animations&&g.animations.length){
-    mixer=new THREE.AnimationMixer(model);
-    g.animations.forEach(function(a){clips[a.name.toLowerCase()]=mixer.clipAction(a)});
-    var idle=clips[Object.keys(clips).filter(function(n){return /idle|stand/.test(n)})[0]]||clips[Object.keys(clips)[0]];
-    if(idle)idle.play();
-  }
-  $("#loader").style.display="none";$("#intro").style.display="flex";
-},function(e){if(e.total)$("#pct").textContent=Math.round(e.loaded/e.total*100)+"%"},
-function(){$("#loader").innerHTML="<p>model.glb ஏற்ற முடியவில்லை. Netlify-இல் deploy செய்து திறக்கவும் (file:// வேலை செய்யாது).</p>"});
+}
+loadModel(CFG.model);
 
 // ---------- Animation
-var clock=new THREE.Clock(),nextBlink=2,blinkAt=-1,mouth=0,smile=0,nodT=-1,mouthPulse=0,blushUntil=0,expressionUntil=0,eyeContact=false;
+var clock=new THREE.Clock(),nextBlink=2,blinkAt=-1,mouth=0,smile=0,nodT=-1;
 function setM(list,v){list.forEach(function(m){m.mesh.morphTargetInfluences[m.i]=v})}
 function loop(){
   requestAnimationFrame(loop);var dt=clock.getDelta(),t=clock.elapsedTime;
@@ -156,15 +163,13 @@ function loop(){
   if(model){
     root.position.y=Math.sin(t*1.5)*0.004;root.rotation.y=Math.sin(t*0.5)*0.05;
     root.rotation.x=speaking?Math.sin(t*5)*0.006:0;
-    mouthPulse=Math.max(0,mouthPulse-dt*3.5);
-    var tgt=speaking?(0.12+Math.abs(Math.sin(t*13))*0.35+mouthPulse*0.45):0;
+    var tgt=speaking?(0.25+Math.abs(Math.sin(t*13))*0.5*(0.6+0.4*Math.sin(t*3.1))):0;
     mouth+=(tgt-mouth)*0.35;setM(morphs.jaw,mouth);
     smile+=((speaking?0.5:0.15)-smile)*0.08;setM(morphs.smile,smile);
     if(t>nextBlink&&blinkAt<0){blinkAt=t;nextBlink=t+2.5+Math.random()*3}
     var b=0;if(blinkAt>=0){var k=(t-blinkAt)/0.16;b=k<1?Math.sin(k*Math.PI):0;if(k>=1)blinkAt=-1}
     setM(morphs.blink,b);
-    if(headBone){headBone.rotation.x=headBase+(speaking?Math.sin(t*4)*0.03:0)+(nodT>=0?Math.sin((t-nodT)*8)*0.15:0)+(expressionUntil>t?0.12:0);headBone.rotation.y+=(eyeContact?0:Math.sin(t*0.35)*0.002);headBone.rotation.y+=(eyeContact?Math.sin(t*0.7)*0.015:0)}
-  $("#facefx").classList.toggle("blush",t<blushUntil);if(expressionUntil>t){smile+=(0.75-smile)*0.12;setM(morphs.smile,smile)}
+    if(headBone)headBone.rotation.x=headBase+(speaking?Math.sin(t*4)*0.03:0)+(nodT>=0?Math.sin((t-nodT)*8)*0.15:0);
     if(nodT>=0&&t-nodT>1.2)nodT=-1;
   }
   renderer.render(scene,camera);
@@ -187,9 +192,8 @@ function say(text){
   var v=voices.find(function(x){return x.lang.toLowerCase().indexOf(code)===0});if(v)u.voice=v;
   else if(lang==="ta")st("இந்த சாதனத்தில் தமிழ் குரல் இல்லை; எழுத்தில் பதில் வரும்");
   u.onstart=function(){setSpeaking(true);st("பேசுகிறார்…")};
-  u.onboundary=function(){mouthPulse=1};
   u.onend=u.onerror=function(){setSpeaking(false);st("கேட்கத் தயார்")};
-  if(speakerOn)speechSynthesis.speak(u);
+  speechSynthesis.speak(u);
 }
 
 // ---------- Replies (AI first, simple fallback)
@@ -207,7 +211,7 @@ function local(q){
 }
 async function reply(q){
   try{
-    var r=await fetch(CFG.ai,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({message:q,history:history.slice(-10),persona:CFG.persona,session:sid,romantic:romanticMode,outfit:outfitNames[outfitChoice]})});
+    var r=await fetch(CFG.ai,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({message:q,history:history.slice(-10),persona:CFG.persona,session:sid})});
     if(r.ok){var d=await r.json();if(d&&d.reply)return d.reply}
   }catch(e){}
   return local(q);
@@ -233,16 +237,10 @@ $("#mic").onclick=function(){
 $("#send").onclick=function(){var v=$("#txt").value;$("#txt").value="";handle(v)};
 $("#txt").onkeydown=function(e){if(e.key==="Enter")$("#send").click()};
 $("#lang").onclick=function(){lang=lang==="ta"?"en":"ta";this.textContent=lang==="ta"?"தமிழ்":"English"};
-function updateCallTimer(reset){var el=$("#timer");if(!el)return;if(reset||!callStartedAt){el.textContent="00:00";return}var sec=Math.max(0,Math.floor((Date.now()-callStartedAt)/1000));el.textContent=String(Math.floor(sec/60)).padStart(2,"0")+":"+String(sec%60).padStart(2,"0")}
-$("#speaker").onclick=function(){speakerOn=!speakerOn;this.setAttribute("aria-pressed",String(speakerOn));this.textContent=speakerOn?"🔊 Speaker":"🔇 Muted";if(speakerOn){speechSynthesis.resume()}else{speechSynthesis.pause()}};
-$("#camstyle").onclick=function(){avatarOn=!avatarOn;this.setAttribute("aria-pressed",String(avatarOn));this.textContent=avatarOn?"✨ Avatar":"🌙 Hide Avatar";document.body.classList.toggle("avatar-hidden",!avatarOn)};
-
 
 // ---------- Call flow
 $("#start").onclick=async function(){
   $("#intro").style.display="none";$("#call").style.display="block";inCall=true;history=[];$("#log").innerHTML="";
-  callStartedAt=Date.now();updateCallTimer();timerTick=setInterval(updateCallTimer,1000);
-  callId=null;try{var cs=await fetch(CFG.ai,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"call_start",session:sid,persona:CFG.persona})});if(cs.ok){var cd=await cs.json();callId=cd.call_id||null}}catch(e){}
   wave();nodT=clock.elapsedTime;
   try{
     var r=await fetch(CFG.ai+"?session="+encodeURIComponent(sid)+"&persona="+CFG.persona);
@@ -252,8 +250,6 @@ $("#start").onclick=async function(){
 };
 $("#end").onclick=function(){
   if("speechSynthesis" in window)speechSynthesis.cancel();rec&&rec.abort&&rec.abort();setSpeaking(false);
-  if(timerTick){clearInterval(timerTick);timerTick=null}updateCallTimer(true);
-  if(callId){fetch(CFG.ai,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"call_end",session:sid,persona:CFG.persona,call_id:callId})}).catch(function(){});callId=null}
   inCall=false;$("#call").style.display="none";$("#intro").style.display="flex";
 };
 </script>
