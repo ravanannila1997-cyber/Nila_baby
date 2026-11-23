@@ -1,4 +1,4 @@
-const SAFETY = "Keep every reply short (1-3 sentences), warm and family-friendly. Never produce sexual, explicit or violent content; if asked, politely change the subject. Reply in the language the user writes in (Tamil or English).";
+const SAFETY = "Keep replies short (1-3 sentences), warm and family-friendly. Never produce explicit sexual or violent content. Reply in the language the user writes in (Tamil or English).";
 const DEFAULT = "You are Meera, a warm, cheerful friend.";
 const json = (code, body) => ({ statusCode: code, headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
 
@@ -34,6 +34,8 @@ exports.handler = async (event) => {
   const key = process.env.ANTHROPIC_API_KEY;
   if (!key) return json(503, { error: "AI not configured" });
   const message = String(b.message || "").slice(0, 1000).trim();
+  const romantic = b.romantic === true;
+  const style = romantic ? " In romantic mode, be affectionate, gently flirty, sweet and respectful, like a fictional adult companion; keep it non-explicit and do not claim to be a real human." : "";
   if (!message) return json(400, { error: "empty" });
 
   let prompt = DEFAULT;
@@ -56,7 +58,7 @@ exports.handler = async (event) => {
   const r = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: { "x-api-key": key, "anthropic-version": "2023-06-01", "content-type": "application/json" },
-    body: JSON.stringify({ model: process.env.ANTHROPIC_MODEL || "claude-sonnet-5-5", max_tokens: 300, system: prompt + " " + SAFETY, messages: msgs }),
+    body: JSON.stringify({ model: process.env.ANTHROPIC_MODEL || "claude-sonnet-5-5", max_tokens: 300, system: prompt + style + " " + SAFETY, messages: msgs }),
   });
   if (!r.ok) return json(502, { error: "upstream" });
   const d = await r.json();
