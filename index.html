@@ -141,7 +141,7 @@ new THREE.GLTFLoader().load(CFG.model,function(g){
 function(){$("#loader").innerHTML="<p>model.glb ஏற்ற முடியவில்லை. Netlify-இல் deploy செய்து திறக்கவும் (file:// வேலை செய்யாது).</p>"});
 
 // ---------- Animation
-var clock=new THREE.Clock(),nextBlink=2,blinkAt=-1,mouth=0,smile=0,nodT=-1;
+var clock=new THREE.Clock(),nextBlink=2,blinkAt=-1,mouth=0,smile=0,nodT=-1,mouthPulse=0;
 function setM(list,v){list.forEach(function(m){m.mesh.morphTargetInfluences[m.i]=v})}
 function loop(){
   requestAnimationFrame(loop);var dt=clock.getDelta(),t=clock.elapsedTime;
@@ -177,7 +177,7 @@ function say(text){
   u.lang=lang==="ta"?"ta-IN":"en-US";u.pitch=CFG.pitch;
   var v=voices.find(function(x){return x.lang.toLowerCase().indexOf(code)===0});if(v)u.voice=v;
   else if(lang==="ta")st("இந்த சாதனத்தில் தமிழ் குரல் இல்லை; எழுத்தில் பதில் வரும்");
-  u.onstart=function(){setSpeaking(true);st("பேசுகிறார்…")};
+  u.onstart=function(){setSpeaking(true);st("பேசுகிறார்…")};\n  u.onboundary=function(){mouthPulse=1};
   u.onend=u.onerror=function(){setSpeaking(false);st("கேட்கத் தயார்")};
   if(speakerOn)speechSynthesis.speak(u);
 }
@@ -224,7 +224,7 @@ $("#send").onclick=function(){var v=$("#txt").value;$("#txt").value="";handle(v)
 $("#txt").onkeydown=function(e){if(e.key==="Enter")$("#send").click()};
 $("#lang").onclick=function(){lang=lang==="ta"?"en":"ta";this.textContent=lang==="ta"?"தமிழ்":"English"};
 function updateCallTimer(reset){var el=$("#timer");if(!el)return;if(reset||!callStartedAt){el.textContent="00:00";return}var sec=Math.max(0,Math.floor((Date.now()-callStartedAt)/1000));el.textContent=String(Math.floor(sec/60)).padStart(2,"0")+":"+String(sec%60).padStart(2,"0")}
-$("#speaker").onclick=function(){speakerOn=!speakerOn;this.setAttribute("aria-pressed",String(speakerOn));this.textContent=speakerOn?"🔊 Speaker":"🔇 Muted";if(!speakerOn){speechSynthesis.resume()}else{speechSynthesis.pause()}};
+$("#speaker").onclick=function(){speakerOn=!speakerOn;this.setAttribute("aria-pressed",String(speakerOn));this.textContent=speakerOn?"🔊 Speaker":"🔇 Muted";if(speakerOn){speechSynthesis.resume()}else{speechSynthesis.pause()}};
 $("#camstyle").onclick=function(){avatarOn=!avatarOn;this.setAttribute("aria-pressed",String(avatarOn));this.textContent=avatarOn?"✨ Avatar":"🌙 Hide Avatar";document.body.classList.toggle("avatar-hidden",!avatarOn)};
 
 
