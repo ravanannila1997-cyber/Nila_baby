@@ -25,6 +25,7 @@ button:disabled{opacity:.5;cursor:default}
 #top{position:fixed;top:0;left:0;right:0;padding:calc(.7rem + env(safe-area-inset-top,0px)) 1rem .7rem;display:flex;justify-content:space-between;align-items:center}
 #who{font-weight:600}#status{color:var(--muted);font-size:.85rem}
 #panel{position:fixed;left:0;right:0;bottom:0;max-width:640px;margin:0 auto;padding:.8rem 1rem calc(.8rem + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:.5rem}
+.call-tools{display:flex;align-items:center;justify-content:center;gap:.5rem;flex-wrap:wrap}.call-tools #timer{font-variant-numeric:tabular-nums;font-weight:700;color:var(--accent);padding:.35rem .6rem;border:1px solid var(--line);border-radius:999px}.call-tools button{font-size:.86rem;padding:.4rem .65rem}body.avatar-hidden #stage{opacity:.12;transition:opacity .25s}#stage{transition:opacity .25s}
 #log{max-height:24vh;overflow-y:auto;display:flex;flex-direction:column;gap:.35rem}
 .m{padding:.45rem .75rem;border-radius:12px;background:rgba(24,34,54,.92);border:1px solid var(--line);max-width:88%;font-size:.95rem}
 .m.me{align-self:flex-end;background:var(--accent);color:var(--onaccent);border-color:var(--accent)}
@@ -53,6 +54,7 @@ button:disabled{opacity:.5;cursor:default}
     <div class="row"><button id="lang">தமிழ்</button><button id="end">முடி</button></div>
   </div>
   <div id="panel">
+    <div class="call-tools"><span id="timer">00:00</span><button id="speaker" aria-pressed="true">🔊 Speaker</button><button id="camstyle" aria-pressed="true">✨ Avatar</button></div>
     <div id="log" aria-live="polite"></div>
     <div class="row">
       <button id="mic" class="primary" aria-pressed="false">🎤 பேசு</button>
@@ -73,6 +75,7 @@ var PERSONAS=[
 var CFG={name:"மீரா",enName:"Meera",persona:"meera",model:"model.glb",pitch:1.2,ai:"/.netlify/functions/chat"};
 var $=function(s){return document.querySelector(s)};
 var lang="ta",history=[],speaking=false,listening=false,rec=null,inCall=false;
+var callId=null,callStartedAt=null,timerTick=null,speakerOn=true,avatarOn=true;
 var sid=(function(){try{var s=localStorage.getItem("sid");if(!s){s=Math.random().toString(36).slice(2)+Date.now().toString(36);localStorage.setItem("sid",s)}return s}catch(e){return "anon"+Date.now().toString(36)}})();
 
 // ---------- Personas
@@ -220,10 +223,16 @@ $("#mic").onclick=function(){
 $("#send").onclick=function(){var v=$("#txt").value;$("#txt").value="";handle(v)};
 $("#txt").onkeydown=function(e){if(e.key==="Enter")$("#send").click()};
 $("#lang").onclick=function(){lang=lang==="ta"?"en":"ta";this.textContent=lang==="ta"?"தமிழ்":"English"};
+function updateCallTimer(reset){var el=$("#timer");if(!el)return;if(reset||!callStartedAt){el.textContent="00:00";return}var sec=Math.max(0,Math.floor((Date.now()-callStartedAt)/1000));el.textContent=String(Math.floor(sec/60)).padStart(2,"0")+":"+String(sec%60).padStart(2,"0")}
+$("#speaker").onclick=function(){speakerOn=!speakerOn;this.setAttribute("aria-pressed",String(speakerOn));this.textContent=speakerOn?"🔊 Speaker":"🔇 Muted";if(!speakerOn){speechSynthesis.resume()}else{speechSynthesis.pause()}};
+$("#camstyle").onclick=function(){avatarOn=!avatarOn;this.setAttribute("aria-pressed",String(avatarOn));this.textContent=avatarOn?"✨ Avatar":"🌙 Hide Avatar";document.body.classList.toggle("avatar-hidden",!avatarOn)};
+
 
 // ---------- Call flow
 $("#start").onclick=async function(){
   $("#intro").style.display="none";$("#call").style.display="block";inCall=true;history=[];$("#log").innerHTML="";
+  callStartedAt=Date.now();updateCallTimer();timerTick=setInterval(updateCallTimer,1000);
+  callId=null;try{var cs=await fetch(CFG.ai,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"call_start",session:sid,persona:CFG.persona})});if(cs.ok){var cd=await cs.json();callId=cd.call_id||null}}catch(e){}
   wave();nodT=clock.elapsedTime;
   try{
     var r=await fetch(CFG.ai+"?session="+encodeURIComponent(sid)+"&persona="+CFG.persona);
@@ -233,6 +242,8 @@ $("#start").onclick=async function(){
 };
 $("#end").onclick=function(){
   if("speechSynthesis" in window)speechSynthesis.cancel();rec&&rec.abort&&rec.abort();setSpeaking(false);
+  if(timerTick){clearInterval(timerTick);timerTick=null}updateCallTimer(true);
+  if(callId){fetch(CFG.ai,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"call_end",session:sid,persona:CFG.persona,call_id:callId})}).catch(function(){});callId=null}
   inCall=false;$("#call").style.display="none";$("#intro").style.display="flex";
 };
 </script>
