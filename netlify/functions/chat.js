@@ -19,6 +19,19 @@ exports.handler = async (event) => {
 
   let b;
   try { b = JSON.parse(event.body || "{}"); } catch (e) { return json(400, { error: "bad json" }); }
+  if (b.action === "call_start" || b.action === "call_end") {
+    if (!sql || !session) return json(200, { ok: false, logged: false });
+    if (b.action === "call_start") {
+      const rows = await sql`INSERT INTO call_sessions (session_id, persona_id) VALUES (${session}, ${persona}) RETURNING id`;
+      return json(200, { ok: true, call_id: rows[0].id });
+    }
+    const callId = Number(b.call_id);
+    if (Number.isInteger(callId) && callId > 0) {
+      await sql`UPDATE call_sessions SET ended_at = now() WHERE id = ${callId} AND session_id = ${session} AND persona_id = ${persona} AND ended_at IS NULL`;
+    }
+    return json(200, { ok: true });
+  }
+
   const message = String(b.message || "").slice(0, 1000).trim();
   const session = String(b.session || "").slice(0, 64);
   const persona = String(b.persona || "meera").slice(0, 20);
