@@ -179,7 +179,7 @@ function say(text){
   else if(lang==="ta")st("இந்த சாதனத்தில் தமிழ் குரல் இல்லை; எழுத்தில் பதில் வரும்");
   u.onstart=function(){setSpeaking(true);st("பேசுகிறார்…")};
   u.onend=u.onerror=function(){setSpeaking(false);st("கேட்கத் தயார்")};
-  speechSynthesis.speak(u);
+  if(speakerOn)speechSynthesis.speak(u);
 }
 
 // ---------- Replies (AI first, simple fallback)
