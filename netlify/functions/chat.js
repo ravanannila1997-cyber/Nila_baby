@@ -14,11 +14,10 @@ exports.handler = async (event) => {
   }
   if (event.httpMethod !== "POST") return json(405, { error: "method" });
 
-  const key = process.env.ANTHROPIC_API_KEY;
-  if (!key) return json(503, { error: "AI not configured" });
-
   let b;
   try { b = JSON.parse(event.body || "{}"); } catch (e) { return json(400, { error: "bad json" }); }
+  const session = String(b.session || "").slice(0, 64);
+  const persona = String(b.persona || "meera").slice(0, 20);
   if (b.action === "call_start" || b.action === "call_end") {
     if (!sql || !session) return json(200, { ok: false, logged: false });
     if (b.action === "call_start") {
@@ -32,9 +31,9 @@ exports.handler = async (event) => {
     return json(200, { ok: true });
   }
 
+  const key = process.env.ANTHROPIC_API_KEY;
+  if (!key) return json(503, { error: "AI not configured" });
   const message = String(b.message || "").slice(0, 1000).trim();
-  const session = String(b.session || "").slice(0, 64);
-  const persona = String(b.persona || "meera").slice(0, 20);
   if (!message) return json(400, { error: "empty" });
 
   let prompt = DEFAULT;
