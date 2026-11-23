@@ -177,7 +177,8 @@ function say(text){
   u.lang=lang==="ta"?"ta-IN":"en-US";u.pitch=CFG.pitch;
   var v=voices.find(function(x){return x.lang.toLowerCase().indexOf(code)===0});if(v)u.voice=v;
   else if(lang==="ta")st("இந்த சாதனத்தில் தமிழ் குரல் இல்லை; எழுத்தில் பதில் வரும்");
-  u.onstart=function(){setSpeaking(true);st("பேசுகிறார்…")};\n  u.onboundary=function(){mouthPulse=1};
+  u.onstart=function(){setSpeaking(true);st("பேசுகிறார்…")};
+  u.onboundary=function(){mouthPulse=1};
   u.onend=u.onerror=function(){setSpeaking(false);st("கேட்கத் தயார்")};
   if(speakerOn)speechSynthesis.speak(u);
 }
