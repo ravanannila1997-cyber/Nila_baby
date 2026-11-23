@@ -1,14 +1,13 @@
-# மீரா – AI Video Call (GitHub + Netlify)
+# Nila_baby - AI Video Call (3D avatar)
 
-Files: `index.html`, `model.glb`, `netlify.toml`, `netlify/functions/chat.js`
+Tamil/English AI companion with a 3D avatar, voice in/out and chat history.
 
-1. Upload all files to a GitHub repo (keep the folder structure).
-2. Netlify > Add new site > Import from Git > pick the repo (no build command).
-3. Site settings > Environment variables > add `ANTHROPIC_API_KEY`.
-4. Deploy. Without the key the site still works with simple built-in replies.
+## Features
+- 3 personas: Meera (friend), Arun (mentor), Priya (language buddy)
+- Voice (mic + speech) and text chat, Tamil / English
+- Chat history saved in Neon Postgres (`db/schema.sql`)
+- AI replies via Netlify Function `netlify/functions/chat.js` (family-friendly system prompt)
 
-Notes
-- Open the deployed URL (file:// will not load model.glb).
-- Mic and voice need HTTPS (Netlify gives it) and Chrome/Edge/Safari.
-- Replace `model.glb` with a rigged GLB (Mixamo animations named “idle”/“wave”) or an ARKit-blendshape GLB to get gestures, blink and lip-sync automatically.
-- Set a monthly spend limit in the Anthropic console to control cost.
+## Netlify environment variables
+- `DATABASE_URL` - Neon connection string
+- `ANTHROPIC_API_KEY` - API key for AI replies (without it the app uses simple built-in replies)

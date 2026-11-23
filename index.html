@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>மீரா – AI Video Call</title>
+<title>AI Video Call</title>
 <style>
 :root{--bg:#0f1724;--card:#182236;--text:#eaf0f7;--muted:#9aa9bc;--accent:#ffb454;--onaccent:#1a1204;--line:#27344d}
 html,body{height:100%;margin:0}
@@ -17,6 +17,10 @@ button:disabled{opacity:.5;cursor:default}
 .overlay{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1rem;text-align:center;padding:1.5rem;background:rgba(15,23,36,.82)}
 .overlay h1{font-size:clamp(2rem,7vw,3.4rem);margin:0;line-height:1.15}
 .overlay p{margin:0;color:var(--muted);max-width:46ch}
+.pers{display:flex;gap:.5rem;flex-wrap:wrap;justify-content:center}
+.pers button{display:flex;flex-direction:column;align-items:center;min-width:8.5rem}
+.pers button small{color:var(--muted)}
+.pers button.sel{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent)}
 #call{display:none}
 #top{position:fixed;top:0;left:0;right:0;padding:calc(.7rem + env(safe-area-inset-top,0px)) 1rem .7rem;display:flex;justify-content:space-between;align-items:center}
 #who{font-weight:600}#status{color:var(--muted);font-size:.85rem}
@@ -37,8 +41,9 @@ button:disabled{opacity:.5;cursor:default}
 
 <div class="overlay" id="loader"><p>மாடல் ஏற்றப்படுகிறது… <b id="pct">0%</b></p></div>
 <div class="overlay" id="intro" style="display:none">
-  <h1>மீரா உங்களுடன் பேச காத்திருக்கிறார்.</h1>
-  <p>மைக்கில் தமிழிலோ ஆங்கிலத்திலோ பேசுங்கள், அல்லது தட்டச்சு செய்யுங்கள்.</p>
+  <h1 id="hello">உங்களுடன் பேச காத்திருக்கிறார்.</h1>
+  <p>துணையைத் தேர்ந்தெடுங்கள். மைக்கில் தமிழிலோ ஆங்கிலத்திலோ பேசுங்கள், அல்லது தட்டச்சு செய்யுங்கள்.</p>
+  <div class="pers" id="pers"></div>
   <button class="primary" id="start">அழைப்பைத் தொடங்கு</button>
 </div>
 
@@ -60,9 +65,28 @@ button:disabled{opacity:.5;cursor:default}
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
 <script>
-var CFG={name:"மீரா",enName:"Meera",model:"model.glb",pitch:1.2,ai:"/.netlify/functions/chat"};
+var PERSONAS=[
+ {id:"meera",name:"மீரா",en:"Meera",tag:"Friend",pitch:1.2},
+ {id:"arun",name:"அருண்",en:"Arun",tag:"Mentor",pitch:0.8},
+ {id:"priya",name:"பிரியா",en:"Priya",tag:"Language buddy",pitch:1.1}
+];
+var CFG={name:"மீரா",enName:"Meera",persona:"meera",model:"model.glb",pitch:1.2,ai:"/.netlify/functions/chat"};
 var $=function(s){return document.querySelector(s)};
 var lang="ta",history=[],speaking=false,listening=false,rec=null,inCall=false;
+var sid=(function(){try{var s=localStorage.getItem("sid");if(!s){s=Math.random().toString(36).slice(2)+Date.now().toString(36);localStorage.setItem("sid",s)}return s}catch(e){return "anon"+Date.now().toString(36)}})();
+
+// ---------- Personas
+function pick(p){
+  CFG.name=p.name;CFG.enName=p.en;CFG.persona=p.id;CFG.pitch=p.pitch;
+  $("#who").textContent=p.name;$("#hello").textContent=p.name+" உங்களுடன் பேச காத்திருக்கிறார்.";
+  Array.prototype.forEach.call($("#pers").children,function(b){b.classList.toggle("sel",b.dataset.id===p.id)});
+}
+PERSONAS.forEach(function(p){
+  var b=document.createElement("button");b.dataset.id=p.id;
+  b.innerHTML="<b></b><small></small>";b.firstChild.textContent=p.name;b.lastChild.textContent=p.tag;
+  b.onclick=function(){pick(p)};$("#pers").appendChild(b);
+});
+pick(PERSONAS[0]);
 
 // ---------- Scene
 var renderer=new THREE.WebGLRenderer({canvas:$("#stage"),antialias:true,alpha:true});
@@ -157,12 +181,12 @@ function say(text){
 
 // ---------- Replies (AI first, simple fallback)
 var FB={
- ta:{greet:"வணக்கம்! உங்களைப் பார்த்ததில் மகிழ்ச்சி. எப்படி இருக்கீங்க?",how:"நான் நல்லா இருக்கேன். நீங்க எப்படி?",name:"என் பெயர் "+CFG.name+".",bye:"சரி, மீண்டும் சந்திப்போம்!",other:["சுவாரஸ்யமா இருக்கு, இன்னும் சொல்லுங்க.","ஓ அப்படியா? அப்புறம் என்ன ஆச்சு?","நான் கவனிக்கிறேன், தொடருங்க."]},
- en:{greet:"Hello! So nice to see you. How are you?",how:"I’m doing great. How about you?",name:"My name is "+CFG.enName+".",bye:"See you again soon!",other:["That sounds interesting, tell me more.","Oh really? What happened next?","I’m listening, go on."]}
+ ta:{greet:"வணக்கம்! உங்களைப் பார்த்ததில் மகிழ்ச்சி. எப்படி இருக்கீங்க?",how:"நான் நல்லா இருக்கேன். நீங்க எப்படி?",bye:"சரி, மீண்டும் சந்திப்போம்!",other:["சுவாரஸ்யமா இருக்கு, இன்னும் சொல்லுங்க.","ஓ அப்படியா? அப்புறம் என்ன ஆச்சு?","நான் கவனிக்கிறேன், தொடருங்க."]},
+ en:{greet:"Hello! So nice to see you. How are you?",how:"I’m doing great. How about you?",bye:"See you again soon!",other:["That sounds interesting, tell me more.","Oh really? What happened next?","I’m listening, go on."]}
 };
 function local(q){
   var x=q.toLowerCase(),d=FB[lang];
-  if(/your name|peyar|பெயர்/.test(x))return d.name;
+  if(/your name|peyar|பெயர்/.test(x))return lang==="ta"?"என் பெயர் "+CFG.name+".":"My name is "+CFG.enName+".";
   if(/how are you|eppadi|எப்படி/.test(x))return d.how;
   if(/\b(hi|hello|hey|vanakkam)\b|வணக்கம்/.test(x)){wave();return d.greet}
   if(/\bbye\b|பாய்/.test(x))return d.bye;
@@ -170,7 +194,7 @@ function local(q){
 }
 async function reply(q){
   try{
-    var r=await fetch(CFG.ai,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({message:q,history:history.slice(-10)})});
+    var r=await fetch(CFG.ai,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({message:q,history:history.slice(-10),persona:CFG.persona,session:sid})});
     if(r.ok){var d=await r.json();if(d&&d.reply)return d.reply}
   }catch(e){}
   return local(q);
@@ -198,10 +222,14 @@ $("#txt").onkeydown=function(e){if(e.key==="Enter")$("#send").click()};
 $("#lang").onclick=function(){lang=lang==="ta"?"en":"ta";this.textContent=lang==="ta"?"தமிழ்":"English"};
 
 // ---------- Call flow
-$("#start").onclick=function(){
+$("#start").onclick=async function(){
   $("#intro").style.display="none";$("#call").style.display="block";inCall=true;history=[];$("#log").innerHTML="";
   wave();nodT=clock.elapsedTime;
-  say(lang==="ta"?"வணக்கம்! நான் "+CFG.name+". பேசலாமா?":"Hi! I’m "+CFG.enName+". Shall we talk?");
+  try{
+    var r=await fetch(CFG.ai+"?session="+encodeURIComponent(sid)+"&persona="+CFG.persona);
+    if(r.ok){var d=await r.json();(d.messages||[]).forEach(function(m){addMsg(m.content,m.role==="user");history.push({role:m.role,content:m.content})})}
+  }catch(e){}
+  say(lang==="ta"?(history.length?"மீண்டும் வருக! தொடரலாமா?":"வணக்கம்! நான் "+CFG.name+". பேசலாமா?"):(history.length?"Welcome back! Shall we continue?":"Hi! I’m "+CFG.enName+". Shall we talk?"));
 };
 $("#end").onclick=function(){
   if("speechSynthesis" in window)speechSynthesis.cancel();rec&&rec.abort&&rec.abort();setSpeaking(false);
